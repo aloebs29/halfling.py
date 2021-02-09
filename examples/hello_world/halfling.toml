@@ -1,0 +1,4 @@
+# This will be the name of the output executable
+compiler = "clang++"
+project_name = "hello_world"
+sources = ["main.cpp"]
