@@ -2,6 +2,7 @@ import toml
 from dataclasses import dataclass
 import subprocess
 from pathlib import Path, PurePath
+import platform
 
 FILEPATH = "halfling.toml"
 OBJ_DIR = "obj"
@@ -15,7 +16,7 @@ class Config:
     build_dir: str = "build"
 
 
-if __name__ == "__main__":
+def run():
     # load config
     config = Config(**toml.load(FILEPATH))
     # create build + obj directory if they don't exist
@@ -28,5 +29,11 @@ if __name__ == "__main__":
         subprocess.run([config.compiler, "-o", obj_file, "-c", source])
         obj_files.append(obj_file)
     # link
-    subprocess.run([config.compiler] + obj_files +
-                   ["-o", PurePath(config.build_dir, config.project_name)])
+    executable_name = PurePath(config.build_dir, config.project_name)
+    if (platform.system() == "Windows"):
+        executable_name = executable_name / ".exe"
+    subprocess.run([config.compiler] + obj_files + ["-o", executable_name])
+
+
+if __name__ == "__main__":
+    run()
