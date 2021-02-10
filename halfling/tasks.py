@@ -8,11 +8,17 @@ from exceptions import HalflingError, HalflingCompileError, HalflingLinkError
 KEEP_OUTPUT_COLORS = "-fdiagnostics-color=always"
 
 
-def build(config):
+def build(config, build_type):
     print(f"Building {config.project_name}..")
     # create build + obj directory if they don't exist
     obj_dir = Path(config.build_dir, config.obj_dir)
     obj_dir.mkdir(parents=True, exist_ok=True)
+    # create flags
+    flags = config.common_flags
+    if build_type == "debug":
+        flags.extend(config.debug_flags)
+    elif build_type == "release":
+        flags.extend(config.release_flags)
     # compile object files
     obj_files = []
     for source in config.sources:
@@ -21,7 +27,7 @@ def build(config):
         obj_file = (obj_dir / source).with_suffix(".o")
         compile_proc = subprocess.run(
             [config.compiler, "-o", obj_file, "-c",
-                source, KEEP_OUTPUT_COLORS],
+                source, KEEP_OUTPUT_COLORS] + flags,
             capture_output=True)
         # if compile fails, raise with stderr info
         if compile_proc.returncode:

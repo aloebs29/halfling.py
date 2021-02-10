@@ -14,6 +14,8 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("task", type=str, choices=[
                         "build", "clean"], help="task to be run by halfling")
+    parser.add_argument("-t", "--type", type=str, choices=["debug", "release"],
+                        default="release", help=f"controls build type; ignored when not running build task")
     args = parser.parse_args()
 
     try:
@@ -21,7 +23,7 @@ def run():
         config = Config(**toml.load(CONFIG_FILEPATH))
         # run task
         if args.task == "build":
-            build(config)
+            build(config, args.type)
         elif args.task == "clean":
             clean(config)
 
