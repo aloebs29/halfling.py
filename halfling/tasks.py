@@ -14,7 +14,7 @@ def build(config, build_type):
     obj_dir = Path(config.build_dir, config.obj_dir)
     obj_dir.mkdir(parents=True, exist_ok=True)
     # create flags
-    flags = config.common_flags
+    flags = config.common_flags + [KEEP_OUTPUT_COLORS]
     if build_type == "debug":
         flags.extend(config.debug_flags)
     elif build_type == "release":
@@ -27,7 +27,7 @@ def build(config, build_type):
         obj_file = (obj_dir / source).with_suffix(".o")
         compile_proc = subprocess.run(
             [config.compiler, "-o", obj_file, "-c",
-                source, KEEP_OUTPUT_COLORS] + flags,
+                source] + flags,
             capture_output=True)
         # if compile fails, raise with stderr info
         if compile_proc.returncode:
@@ -43,7 +43,7 @@ def build(config, build_type):
     # attempt link
     print(f"Linking {executable_name}..")
     link_proc = subprocess.run([config.compiler] + obj_files +
-                               ["-o", executable_name, KEEP_OUTPUT_COLORS],
+                               ["-o", executable_name] + flags,
                                capture_output=True)
     # if link fails, raise with stderr info
     if link_proc.returncode:
