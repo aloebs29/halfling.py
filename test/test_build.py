@@ -1,10 +1,13 @@
 import unittest
 import subprocess
 import pathlib
+import sys
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-HALFLING_MAIN_PATH = SCRIPT_PATH / "../halfling/main.py"
-EXAMPLES_DIR_PATH = SCRIPT_PATH / "../examples"
+PROJECT_ROOT_PATH = SCRIPT_PATH.parent
+HALFLING_ROOT_PATH = PROJECT_ROOT_PATH / "halfling"
+HALFLING_MAIN_PATH = HALFLING_ROOT_PATH / "main.py"
+EXAMPLES_DIR_PATH = PROJECT_ROOT_PATH / "examples"
 TEST_DATA_DIR_PATH = SCRIPT_PATH / "data"
 
 # NOTE: These are high-level functional tests that actually build projects,
@@ -18,8 +21,7 @@ class TestBuildSuccess(unittest.TestCase):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(EXAMPLES_DIR_PATH / "hello_world"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(0, build_proc.returncode)
         # output is correct..
         executable = list((EXAMPLES_DIR_PATH / "hello_world" /
@@ -35,18 +37,17 @@ class TestBuildSuccess(unittest.TestCase):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(EXAMPLES_DIR_PATH / "shotgun"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(0, build_proc.returncode)
         # executable runs
         executable = list((EXAMPLES_DIR_PATH / "shotgun" /
                            "build_output").glob("shotgun*"))[0]
-        hello_proc = subprocess.run(
+        shotgun_proc = subprocess.run(
             [executable],
             capture_output=True)
-        self.assertEqual(0, hello_proc.returncode)
+        self.assertEqual(0, shotgun_proc.returncode)
         self.assertTrue(
-            b"Calculating 2 + 3 with function in another file.." in hello_proc.stdout)
+            b"Calculating 2 + 3 with function in another file.." in shotgun_proc.stdout)
 
 
 class TestBuildFailure(unittest.TestCase):
@@ -54,30 +55,30 @@ class TestBuildFailure(unittest.TestCase):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(TEST_DATA_DIR_PATH / "compile_error"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(1, build_proc.returncode)
+        self.assertTrue(b"Error compiling" in build_proc.stdout)
 
     def test_link_error(self):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(TEST_DATA_DIR_PATH / "link_error"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(1, build_proc.returncode)
+        self.assertTrue(b"Error linking" in build_proc.stdout)
 
     def test_toml_invalid(self):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(TEST_DATA_DIR_PATH / "toml_invalid"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(1, build_proc.returncode)
+        self.assertTrue(b"Invalid TOML" in build_proc.stdout)
 
     def test_toml_missing(self):
         build_proc = subprocess.run(
             ["python3", HALFLING_MAIN_PATH, "build"],
             cwd=(TEST_DATA_DIR_PATH / "toml_missing"),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
+            capture_output=True)
         self.assertEqual(1, build_proc.returncode)
+        self.assertTrue(b"file not found" in build_proc.stdout)
