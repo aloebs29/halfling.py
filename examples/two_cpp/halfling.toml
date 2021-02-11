@@ -1,5 +1,0 @@
-# This will be the name of the output executable
-project_name = "two_cpp"
-
-compiler = "clang++"
-sources = ["main.cpp", "not_main.cpp"]

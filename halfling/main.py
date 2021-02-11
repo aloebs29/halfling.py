@@ -2,9 +2,9 @@ import argparse
 import toml
 import sys
 
-from config import Config
-from exceptions import HalflingError
-from tasks import build, clean
+from halfling.config import Config
+from halfling.exceptions import HalflingError
+from halfling.tasks import build, clean
 
 CONFIG_FILEPATH = "halfling.toml"
 
