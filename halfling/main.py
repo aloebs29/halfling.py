@@ -15,8 +15,9 @@ def run():
     parser.add_argument("task", type=str, choices=[
                         "build", "clean"], help="task to be run by halfling")
     parser.add_argument("-t", "--type", type=str, choices=["debug", "release"],
-                        default="release", help="controls build type; ignored"
-                        " when not running build task")
+                        default="release", help="controls build type; defaults to release")
+    parser.add_argument("-j", "--jobs", type=int, default=None,
+                        help="controls max processes to run build with; defaults to os.cpu_count()")
     args = parser.parse_args()
 
     try:
@@ -24,7 +25,7 @@ def run():
         config = Config(**toml.load(CONFIG_FILEPATH))
         # run task
         if args.task == "build":
-            build(config, args.type)
+            build(config, args.type, args.jobs)
         elif args.task == "clean":
             clean(config)
 

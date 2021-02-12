@@ -45,6 +45,7 @@ class CompileOptions:
 
 
 def force_compile(compiler, src_fname, obj_fname, options):
+    print(f"Compiling {src_fname}..")
     proc = subprocess.run([compiler, "-o", obj_fname, "-c", src_fname] +
                           options.flags + options.includes + options.defines,
                           capture_output=True)
@@ -54,6 +55,7 @@ def force_compile(compiler, src_fname, obj_fname, options):
 
 
 def link(compiler, infiles, outfile, options):
+    print(f"Linking {outfile}..")
     link_proc = subprocess.run([compiler] + infiles + options.flags +
                                options.lib_paths +
                                options.libs + ["-o", outfile],
