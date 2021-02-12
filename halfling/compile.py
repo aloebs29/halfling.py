@@ -1,9 +1,30 @@
 import subprocess
+from pathlib import Path
 
-from exceptions import HalflingCompileError, HalflingLinkError
+from halfling.exceptions import HalflingCompileError, HalflingLinkError
 
 KEEP_OUTPUT_COLORS = "-fdiagnostics-color=always"
 WRITE_DEPENDENCY_INFO = "-MMD"
+
+
+def _are_deps_out_of_date(deps_fname, obj_mtime, file_mtimes):
+    # deps file should always exist, if they don't, just call it OOD
+    if not deps_fname.exists():
+        return True
+    # read deps file
+    with open(deps_fname, "r") as dep_file:
+        deps = dep_file.read().split(":")[1].replace("\\", "").split()
+        # loop through dependencies, returning true if we find one OOD
+        for dep in deps:
+            # Add file to mtimes dict
+            if dep not in file_mtimes:
+                file_mtimes[dep] = Path(dep).stat().st_mtime
+
+            if obj_mtime < file_mtimes[dep]:
+                return True
+
+    # if execution reaches here, all dependencies are up to date
+    return False
 
 
 class CompileOptions:
@@ -23,16 +44,16 @@ class CompileOptions:
             self.flags.extend(config.release_flags)
 
 
-def run_compile(compiler, infile, outfile, options):
-    proc = subprocess.run([compiler, "-o", outfile, "-c", infile] +
+def force_compile(compiler, src_fname, obj_fname, options):
+    proc = subprocess.run([compiler, "-o", obj_fname, "-c", src_fname] +
                           options.flags + options.includes + options.defines,
                           capture_output=True)
     if proc.returncode:
         raise HalflingCompileError(
-            f"Error compiling {infile}:\n{proc.stderr.decode('ascii')}")
+            f"Error compiling {src_fname}:\n{proc.stderr.decode('ascii')}")
 
 
-def run_link(compiler, infiles, outfile, options):
+def link(compiler, infiles, outfile, options):
     link_proc = subprocess.run([compiler] + infiles + options.flags +
                                options.lib_paths +
                                options.libs + ["-o", outfile],
@@ -41,3 +62,18 @@ def run_link(compiler, infiles, outfile, options):
     if link_proc.returncode:
         raise HalflingLinkError(
             f"Error linking {outfile}:\n{link_proc.stderr.decode('ascii')}")
+
+
+def is_compile_needed(src_fname, obj_fname, file_mtimes):
+    # add source file to mtimes dict
+    if str(src_fname) not in file_mtimes:
+        file_mtimes[str(src_fname)] = src_fname.stat().st_mtime
+    # if obj doesn't exist, we need compile
+    if not obj_fname.exists():
+        return True
+    # if obj is out of date, we need compile
+    obj_mtime = obj_fname.stat().st_mtime
+    if obj_mtime < file_mtimes[str(src_fname)]:
+        return True
+    # If source is up to date, check dependencies
+    return _are_deps_out_of_date(obj_fname.with_suffix(".d"), obj_mtime, file_mtimes)

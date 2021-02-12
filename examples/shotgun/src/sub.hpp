@@ -1,6 +1,6 @@
-#ifndef __MUL_HPP
-#define __MUL_HPP
+#ifndef __SUB_HPP
+#define __SUB_HPP
 
-int mul(int a, int b);
+int sub(int a, int b);
 
-#endif // __MUL_HPP
+#endif // __SUB_HPP

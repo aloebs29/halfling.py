@@ -2,9 +2,9 @@ import argparse
 import sys
 import toml
 
-from config import Config
-from exceptions import HalflingError
-from tasks import run_build, run_clean
+from halfling.config import Config
+from halfling.exceptions import HalflingError
+from halfling.tasks import build, clean
 
 CONFIG_FILEPATH = "halfling.toml"
 
@@ -24,9 +24,9 @@ def run():
         config = Config(**toml.load(CONFIG_FILEPATH))
         # run task
         if args.task == "build":
-            run_build(config, args.type)
+            build(config, args.type)
         elif args.task == "clean":
-            run_clean(config)
+            clean(config)
 
     except FileNotFoundError:
         print(f"{CONFIG_FILEPATH} file not found in current directory.")
