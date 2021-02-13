@@ -20,12 +20,12 @@ sources = ["main.cpp"]
 ```
 
 Your project can then be built by navigating to the same folder with your `halfling.toml` file and running:
-```shell
+```console
 $ halfling build
 ```
 
 To view all of the CLI arguments & options, use `halfling -h`:
-```shell
+```console
 $ halfling -h
 usage: halfling [-h] [-t {debug,release}] [-j JOBS] {build,clean}
 
