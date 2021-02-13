@@ -17,5 +17,9 @@ setup(
     packages=["halfling"],
     include_package_data=True,
     install_requires=["toml"],
-    scripts=["bin/halfling"],
+    entry_points={
+        "console_scripts": [
+            "halfling = halfling.main:run",
+        ]
+    },
 )
