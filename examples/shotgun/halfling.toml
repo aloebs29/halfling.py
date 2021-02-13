@@ -8,6 +8,8 @@ sources = [
   "src/sub.cpp",
 ]
 
+###### Everything below this line is optional #######
+
 defines = [
   "DEFINED_IN_TOML",
   "ALSO_DEFINED_IN_TOML",
@@ -22,5 +24,5 @@ debug_flags = ["-O0"] # defaults to ["-0g", "-g"]
 release_flags = ["-O1"] # defualts to ["-02"]
 
 # Specify a different build dir and obj dir -- just to be a contrarian
-build_dir = "build_output" 
-obj_dir = "objects" # this will resolve to {build_dir}/{obj_dir}
+build_dir = "hbuild" # defaults to build
+obj_dir = "hobj" # defaults to obj; this will resolve to {build_dir}/{obj_dir}

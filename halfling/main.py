@@ -1,3 +1,4 @@
+"""Main application called by halfling script."""
 import argparse
 import sys
 import toml
@@ -10,6 +11,8 @@ CONFIG_FILEPATH = "halfling.toml"
 
 
 def run():
+    """Collects command line args and runs build/clean task according to args.
+    """
     # collect command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("task", type=str, choices=[

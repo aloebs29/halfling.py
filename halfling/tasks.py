@@ -1,3 +1,4 @@
+"""Exposes high level build tasks."""
 from pathlib import Path, PurePath
 import platform
 import shutil
@@ -6,7 +7,7 @@ from multiprocessing.dummy import Pool
 from halfling.compile import CompileOptions, force_compile, link, is_compile_needed
 
 
-class TaskPool:
+class _TaskPool:
     def __init__(self, num_processes):
         self.pool = Pool(num_processes)
         self.pending = 0
@@ -33,6 +34,21 @@ class TaskPool:
 
 
 def build(config, build_type, num_processes):
+    """Builds project.
+
+    Args:
+        config (Config): Halfling configuration.
+        build_type (str): "debug" or "release"
+        num_processes (int): Number of processes to run the build with. If 'None'
+            is provided for this argument, will default to os.cpu_count().
+
+    Returns:
+        None
+
+    Raises:
+        HalfingError: if any build compilation errors occur. Will contain 
+        compiler error message.
+    """
     print(f"Building {config.project_name}..")
     # create build + obj directory if they don't exist
     obj_dir = Path(config.build_dir, config.obj_dir)
@@ -47,7 +63,7 @@ def build(config, build_type, num_processes):
     file_mtimes = {}
 
     # compile files as needed in a thread pool
-    pool = TaskPool(num_processes)
+    pool = _TaskPool(num_processes)
     for src_fname in config.sources:
         src_fname = Path(src_fname)
         obj_fname = obj_dir / src_fname.with_suffix(".o").name
@@ -74,5 +90,13 @@ def build(config, build_type, num_processes):
 
 
 def clean(config):
+    """Cleans project (removes build dir).
+
+    Args:
+        config (Config): Halfling configuration.
+
+    Returns:
+        None
+    """
     shutil.rmtree(config.build_dir)
     print("Clean successful.")

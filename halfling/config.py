@@ -1,8 +1,10 @@
+"""Halfing configuration."""
 from dataclasses import dataclass, field
 
 
 @dataclass
 class Config:
+    """Halfing configuration object."""
     # mandatory build info
     project_name: str
     compiler: str

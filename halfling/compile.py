@@ -1,3 +1,4 @@
+"""Exposes functionality for compiling and linking c programs."""
 import subprocess
 from pathlib import Path
 
@@ -28,7 +29,12 @@ def _are_deps_out_of_date(deps_fname, obj_mtime, file_mtimes):
 
 
 class CompileOptions:
-    """Contains options for compiling and linking"""
+    """Contains options for compiling and linking. 
+
+    Args:
+        config (Config): Halfling configuration.
+        build_type (str): "debug" or "release"
+    """
 
     def __init__(self, config, build_type):
         self.includes = [f"-I{path}" for path in config.include_paths]
@@ -45,6 +51,20 @@ class CompileOptions:
 
 
 def force_compile(compiler, src_fname, obj_fname, options):
+    """Runs compilation in subprocess regardless of whether obj is out of date.
+
+    Args:
+        compiler (str): Compiler command to be used.
+        src_fname (str): Filename of source to be compiled.
+        obj_fname (str): Filename of object file to be output.
+        options (CompileOptions): Options object.
+
+    Returns:
+        None
+
+    Raises:
+        HalflingCompileError: if process fails, contains compiler error msg.
+    """
     print(f"Compiling {src_fname}..")
     proc = subprocess.run([compiler, "-o", obj_fname, "-c", src_fname] +
                           options.flags + options.includes + options.defines,
@@ -55,6 +75,20 @@ def force_compile(compiler, src_fname, obj_fname, options):
 
 
 def link(compiler, infiles, outfile, options):
+    """Runs link in subprocess.
+
+    Args:
+        compiler (str): Compiler command to be used.
+        infiles (list): List of obj files to be linked
+        outfile (str): Filename of executable to be output.
+        options (CompileOptions): Options object.
+
+    Returns:
+        None
+
+    Raises:
+        HalflingCompileError: if process fails, contains compiler error msg.
+    """
     print(f"Linking {outfile}..")
     link_proc = subprocess.run([compiler] + infiles + options.flags +
                                options.lib_paths +
@@ -67,6 +101,18 @@ def link(compiler, infiles, outfile, options):
 
 
 def is_compile_needed(src_fname, obj_fname, file_mtimes):
+    """Checks if object file is out of date and need recompile.
+
+    Args:
+        src_fname (str): Filename of the source associated with the object file.
+        obj_fname (str): Object filename.
+        file_mtimes (dict): {filename, modified_time} Dictionary of file 
+            modified times evaluated thus far. Will be appended to by this
+            function if new files are evaluated.
+
+    Returns:
+        bool: True if object file is out of date
+    """
     # add source file to mtimes dict
     if str(src_fname) not in file_mtimes:
         file_mtimes[str(src_fname)] = src_fname.stat().st_mtime
