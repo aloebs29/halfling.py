@@ -14,9 +14,11 @@ class _TaskPool:
         self.exc = None
 
     def _job_callback(self, _):
+        # TODO: this is probably not atomic
         self.pending -= 1
 
     def _job_err_callback(self, exc):
+        # TODO: this is almost certainly not atomic
         self.exc = exc
 
     def submit_job(self, func, args):
