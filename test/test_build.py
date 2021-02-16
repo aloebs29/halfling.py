@@ -51,7 +51,7 @@ class TestBuildSuccess(unittest.TestCase):
         self.assertEqual(0, build_proc.returncode)
         # executable runs
         executable = list((EXAMPLES_DIR_PATH / "shotgun" /
-                           "build_output").glob("shotgun*"))[0]
+                           "hbuild").glob("shotgun*"))[0]
         shotgun_proc = subprocess.run(
             [executable],
             capture_output=True)

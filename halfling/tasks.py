@@ -2,7 +2,7 @@
 from pathlib import Path, PurePath
 import platform
 import shutil
-from multiprocessing.dummy import Pool
+from multiprocessing.dummy import Pool, Lock
 
 from halfling.compile import CompileOptions, force_compile, link, is_compile_needed
 
@@ -12,14 +12,17 @@ class _TaskPool:
         self.pool = Pool(num_processes)
         self.pending = 0
         self.exc = None
+        self.mutex = Lock()
 
     def _job_callback(self, _):
-        # TODO: this is probably not atomic
+        self.mutex.acquire()
         self.pending -= 1
+        self.mutex.release()
 
     def _job_err_callback(self, exc):
-        # TODO: this is almost certainly not atomic
+        self.mutex.acquire()
         self.exc = exc
+        self.mutex.release()
 
     def submit_job(self, func, args):
         self.pending += 1
@@ -27,12 +30,20 @@ class _TaskPool:
             func, args, callback=self._job_callback, error_callback=self._job_err_callback)
 
     def wait_for_done(self):
-        while self.pending:
-            # raise exceptions from threads here
-            if self.exc:
+        while True:
+            # copy locked values
+            self.mutex.acquire()
+            pending = self.pending
+            exc = self.exc
+            self.mutex.release()
+            # check for exception
+            if exc:
                 self.pool.terminate()
                 self.pool.join()
                 raise self.exc
+            # check for done
+            if pending == 0:
+                return
 
 
 def build(config, build_type, num_processes):
@@ -100,5 +111,8 @@ def clean(config):
     Returns:
         None
     """
-    shutil.rmtree(config.build_dir)
-    print("Clean successful.")
+    if Path(config.build_dir).exists():
+        shutil.rmtree(config.build_dir)
+        print("Clean successful.")
+    else:
+        print("Nothing to clean.")
