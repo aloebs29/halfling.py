@@ -94,6 +94,8 @@ def build(config, build_type, num_processes):
     executable_name = Path(config.build_dir, config.project_name)
     if platform.system() == "Windows":
         executable_name = executable_name.with_suffix(".exe")
+    else:
+        executable_name = executable_name.with_suffix(".out")
     # link
     if needs_link or not executable_name.exists():
         link(config.compiler, obj_fnames, executable_name, options)

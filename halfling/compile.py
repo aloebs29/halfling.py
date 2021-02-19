@@ -71,7 +71,10 @@ def force_compile(compiler, src_fname, obj_fname, options):
                           capture_output=True)
     if proc.returncode:
         raise HalflingCompileError(
-            f"Error compiling {src_fname}:\n{proc.stderr.decode('ascii')}")
+            f"Error compiling {src_fname}:\n{proc.stderr.decode('utf-8')}")
+    # catch warning output
+    if proc.stderr:
+        print(proc.stderr.decode("utf-8"))
 
 
 def link(compiler, infiles, outfile, options):
@@ -90,14 +93,17 @@ def link(compiler, infiles, outfile, options):
         HalflingCompileError: if process fails, contains compiler error msg.
     """
     print(f"Linking {outfile}..")
-    link_proc = subprocess.run([compiler] + infiles + options.flags +
-                               options.lib_paths +
-                               options.libs + ["-o", outfile],
-                               capture_output=True)
+    proc = subprocess.run([compiler] + infiles + options.flags +
+                          options.lib_paths +
+                          options.libs + ["-o", outfile],
+                          capture_output=True)
     # if link fails, raise with stderr info
-    if link_proc.returncode:
+    if proc.returncode:
         raise HalflingLinkError(
-            f"Error linking {outfile}:\n{link_proc.stderr.decode('ascii')}")
+            f"Error linking {outfile}:\n{proc.stderr.decode('utf-8')}")
+    # catch warning output
+    if proc.stderr:
+        print(proc.stderr.decode("utf-8"))
 
 
 def is_compile_needed(src_fname, obj_fname, file_mtimes):

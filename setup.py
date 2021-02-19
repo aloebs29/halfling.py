@@ -6,7 +6,7 @@ with open(Path(__file__).parent / "README.md") as f:
 
 setup(
     name="halfling",
-    version="0.1.1",
+    version="0.1.3",
     description="Small C/++ build system written in Python.",
     long_description=README,
     long_description_content_type="text/markdown",
