@@ -62,9 +62,10 @@ def build(config, build_type, num_processes):
         HalfingError: if any build compilation errors occur. Will contain 
         compiler error message.
     """
-    print(f"Building {config.project_name}..")
+    print(f"Building {config.project_name} {build_type}..")
     # create build + obj directory if they don't exist
-    obj_dir = Path(config.build_dir, config.obj_dir)
+    build_dir = Path(config.build_dir) / build_type
+    obj_dir = build_dir / config.obj_dir
     obj_dir.mkdir(parents=True, exist_ok=True)
     # create compile options
     options = CompileOptions(config, build_type)
@@ -91,7 +92,7 @@ def build(config, build_type, num_processes):
     pool.wait_for_done()
 
     # get windows-compatible exe name
-    executable_name = Path(config.build_dir, config.project_name)
+    executable_name = build_dir / config.project_name
     if platform.system() == "Windows":
         executable_name = executable_name.with_suffix(".exe")
     else:
