@@ -1,5 +1,5 @@
 # halfling
-Small C/++ build system written in Python; supports gcc and clang.
+Small, practical C/++ build system written in Python; supports gcc and clang.
 
 ## Installation
 ```shell
