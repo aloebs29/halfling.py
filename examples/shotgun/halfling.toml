@@ -20,7 +20,7 @@ libraries = ["mul"]
 library_paths = ["lib/mul"]
 
 common_flags = ["-Wall"]
-debug_flags = ["-O0"] # defaults to ["-0g", "-g"]
+debug_flags = ["-Og", "-g"] # defaults to ["-g"]
 release_flags = ["-O1"] # defualts to ["-02"]
 
 # Specify a different build dir and obj dir -- just to be a contrarian

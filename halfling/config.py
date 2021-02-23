@@ -19,5 +19,5 @@ class Config:
     libraries: list = field(default_factory=list)
     # compiler flags
     common_flags: list = field(default_factory=list)
-    debug_flags: list = field(default_factory=lambda: ["-Og", "-g"])
+    debug_flags: list = field(default_factory=lambda: ["-g"])
     release_flags: list = field(default_factory=lambda: ["-O2"])
