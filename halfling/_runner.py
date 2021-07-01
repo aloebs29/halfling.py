@@ -5,7 +5,7 @@ import sys
 import importlib.util
 
 from halfling.exceptions import HalflingError, HalflingSyntaxError
-from halfling.tasks import tasks # what a lovely heirarchy.......
+from halfling.tasks import _tasks
 from halfling.utils import _HALFLING_VERSION
 
 # TODO (aloebs29): search up directories for this file if it is not found in the current dir. This
@@ -27,7 +27,7 @@ def _collect_command_line_args():
     parser.add_argument("--version", action="store_true", help="display the version string")
     
     subparsers = parser.add_subparsers()
-    for name, task in tasks.items():
+    for name, task in _tasks.items():
         task_parser = subparsers.add_parser(name)
         if task.setup_args is not None:
             task.setup_args(task_parser)

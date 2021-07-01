@@ -1,8 +1,23 @@
+"""Shortcuts for common halfling tasks."""
+
 import halfling
 
 
 def add_build_task(builder, build_types_dict=None):
+    """Adds a build task to halfling.
 
+    Args:
+        builder (halfling.builders.Builder): Builder to be used by the task.
+        build_types_dict (dict of str, Callable[halfling.builders.BuildOptions]): Dictionary for 
+            mapping build types to an associated function which alters the builder's options.
+
+    Example:
+        add_build_task(halfling.builders.CxxBuilder(my_options), {
+                "debug": lambda options: options.flags.extend(['-g']),
+                "release": lambda options: options.flags.extend(['-O2'])
+            }
+        )
+    """
     def setup_build_args(parser):
         if build_types_dict is not None:
             default_build_type = next(iter(build_types_dict.keys()))
@@ -26,6 +41,12 @@ def add_build_task(builder, build_types_dict=None):
 
 
 def add_clean_task(builder):
+    """Adds a clean task to halfling (removes build dir).
+
+    Args:
+        builder (halfling.builders.Builder): Builder associated with the clean operation (specifies
+            build dir to be cleaned).
+    """
     halfling.tasks.add_task(
         "clean",
         lambda _: builder.clean()
@@ -33,5 +54,15 @@ def add_clean_task(builder):
 
 
 def add_build_and_clean_tasks(builder, build_types_dict=None):
+    """Adds a build task and clean task to halfling.
+
+    Args:
+        builder (halfling.builders.Builder): Builder to be used by the tasks.
+        build_types_dict (dict of str, Callable[halfling.builders.BuildOptions]): Dictionary for 
+            mapping build types to an associated function which alters the builder's options.
+
+    Note:
+        See add_build_task docstring for more information on the build_type_dict.
+    """
     add_build_task(builder, build_types_dict)
     add_clean_task(builder)

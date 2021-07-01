@@ -10,7 +10,7 @@ with open(Path(__file__).parent / "README.md") as f:
 setup(
     name="halfling",
     version=VERSION,
-    description="Small C/++ build system written in Python.",
+    description="Small, practical build and task automation system written in Python.",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/aloebs29/halfling",

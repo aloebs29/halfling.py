@@ -1,4 +1,4 @@
-"""Exposes functionality for compiling and linking c programs."""
+"""Exposes functionality for compiling and linking c/c++ programs."""
 
 from dataclasses import dataclass, field
 import os
@@ -15,6 +15,7 @@ WRITE_DEPENDENCY_INFO = "-MMD"
 
 @dataclass
 class CxxBuildOptions(common.BuildOptions):
+    """Data structure containing c/c++ build options."""
     # mandatory
     executable_name: os.PathLike
     compiler: str
@@ -31,6 +32,7 @@ class CxxBuildOptions(common.BuildOptions):
 
     
     def combine_flags(self):
+        """Convenience function for creating flags to be passed to compiler command."""
         return [f"-I{path}" for path in self.include_paths] + \
             [f"-D{define}" for define in self.defines] + \
             [f"-L{path}" for path in self.lib_paths] + \
@@ -39,20 +41,18 @@ class CxxBuildOptions(common.BuildOptions):
 
 
 class CxxBuilder(common.Builder):
+    """Builder for c/c++."""
 
     def build(self, num_processes=None):
         """Builds project.
 
         Args:
-            num_processes (int): Number of processes to run the build with. If 'None'
-                is provided for this argument, will default to os.cpu_count().
-
-        Returns:
-            None
+            num_processes (int): Number of processes to run the build with. If 'None' is provided
+                for this argument, will default to os.cpu_count().
 
         Raises:
-            HalfingError: if any build compilation errors occur. Will contain 
-            compiler error message.
+            halfling.HalfingError: if any build compilation errors occur. Will contain compiler 
+                error message.
         """
         print(f"Building {self.options.executable_name}..")
         # create build + obj directory if they don't exist
@@ -151,7 +151,7 @@ def compile_file(compiler, src_fname, obj_fname, flags=[]):
         None
 
     Raises:
-        HalflingCompileError: if process fails, contains compiler error msg.
+        halfling.HalflingCompileError: if process fails, contains compiler error msg.
     """
     print(f"Compiling {src_fname}..")
     proc = subprocess.run([compiler, "-o", obj_fname, "-c", src_fname] + flags,
@@ -177,7 +177,7 @@ def link(compiler, infiles, outfile, flags=[]):
         None
 
     Raises:
-        HalflingCompileError: if process fails, contains compiler error msg.
+        halfling.HalflingLinkError: if process fails, contains compiler error msg.
     """
     print(f"Linking {outfile}..")
     proc = subprocess.run([compiler] + infiles + flags + ["-o", outfile],
