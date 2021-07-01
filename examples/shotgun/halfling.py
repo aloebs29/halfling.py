@@ -1,23 +1,3 @@
-# halfling
-
-Small, practical build and task automation system written in Python.
-
-## Installation
-
-```shell
-$ pip3 install halfling
-```
-
-## Introduction
-
-For some strange reason I felt the urge to create my own build system. Halfling currently supports C and C++ builds out of the box (with incremental builds based on file modified times), but adding your own builder is as simple as subclassing `halfling.builders.Builder` (see `halfling/builders/cxx.py` for an example).
-
-Halfling is not intended to be feature rich, free of bugs, or particularly fast. On my machine, builds with halfling are marginally slower than builds with make.
-
-The biggest advantage to halfling is extensibility. The halfling CLI (invoked with `halfling`) will attempt to load a file named `halfling.py` in the current directory. This `halfling.py` file acts as an extension file; it can be used to configure your builds, add tasks to the CLI, and/or execute any arbitrary python code.
-
-Example extension file (`halfling/examples/shotgun/halfling.py`):
-```python
 from pathlib import Path
 
 import halfling
@@ -72,4 +52,3 @@ halfling.tasks.add_task("my_task", my_task, setup_my_task_args)
 # Execute arbitrary code at load time. This probably isn't useful, its more for the sake of
 # demonstrating that this is just normal python code.
 print("Extension file loaded.")
-```

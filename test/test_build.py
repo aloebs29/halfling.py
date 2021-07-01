@@ -3,12 +3,12 @@ import subprocess
 import pathlib
 import sys
 
-SCRIPT_PATH = pathlib.Path(__file__).parent.absolute()
-PROJECT_ROOT_PATH = SCRIPT_PATH.parent
+TEST_DIR_PATH = pathlib.Path(__file__).parent.absolute()
+PROJECT_ROOT_PATH = TEST_DIR_PATH.parent
 
 HALFLING_MAIN_PATH = PROJECT_ROOT_PATH / "halfling/main.py"
 EXAMPLES_DIR_PATH = PROJECT_ROOT_PATH / "examples"
-TEST_DATA_DIR_PATH = SCRIPT_PATH / "data"
+TEST_DATA_DIR_PATH = TEST_DIR_PATH / "data"
 
 # NOTE: These are high-level functional tests that actually build projects,
 # they may take a few seconds to run.
@@ -41,7 +41,7 @@ class TestBuildSuccess(unittest.TestCase):
             [executable],
             capture_output=True)
         self.assertEqual(0, hello_proc.returncode)
-        self.assertEqual(b"Hello world!\n", hello_proc.stdout)
+        self.assertEqual(b"Hello, world!\n", hello_proc.stdout)
 
     def test_shotgun(self):
         # build runs..
@@ -73,12 +73,13 @@ class TestBuildFailure(unittest.TestCase):
         self.assertEqual(1, build_proc.returncode)
         self.assertTrue(b"Error linking" in build_proc.stdout)
 
-    def test_toml_invalid(self):
-        build_proc = _build(TEST_DATA_DIR_PATH / "toml_invalid")
+    def test_extension_invalid(self):
+        build_proc = _build(TEST_DATA_DIR_PATH / "extension_invalid")
         self.assertEqual(1, build_proc.returncode)
-        self.assertTrue(b"Invalid TOML" in build_proc.stdout)
+        self.assertTrue(b"Invalid syntax found in halfling.py" in build_proc.stdout)
 
-    def test_toml_missing(self):
-        build_proc = _build(TEST_DATA_DIR_PATH / "toml_missing")
-        self.assertEqual(1, build_proc.returncode)
-        self.assertTrue(b"file not found" in build_proc.stdout)
+    def test_extension_missing(self):
+        build_proc = _build(TEST_DATA_DIR_PATH / "extension_missing")
+        self.assertEqual(2, build_proc.returncode)
+        self.assertTrue(b"Warning: halfling.py file not found" in build_proc.stdout)
+        self.assertTrue(b"error: invalid choice: 'build'" in build_proc.stderr)
