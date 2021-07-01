@@ -45,7 +45,7 @@ def run():
         print(f"Warning: {_EXTENSION_FILENAME} file not found in current directory.")
     except SyntaxError as exc:
         print(f"Invalid syntax found in {_EXTENSION_FILENAME}.")
-        # chain & raise so the user gets the familiar python stack trace
+        # raise so the user gets the familiar python stack trace
         raise
 
     # collect args & run
