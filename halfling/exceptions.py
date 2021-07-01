@@ -2,12 +2,12 @@
 
 
 class HalflingError(Exception):
-    """Encapsulates all exceptions risen by halfling (probably not)."""
+    """Encapsulates exceptions risen by halfling."""
 
 
 class HalflingCompileError(HalflingError):
-    """Encapsulates all compile errors (probably not)."""
+    """Encapsulates compile errors."""
 
 
 class HalflingLinkError(HalflingError):
-    """Encapsulates all link errors (probably not)."""
+    """Encapsulates link errors."""

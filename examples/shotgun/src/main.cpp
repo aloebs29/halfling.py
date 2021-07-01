@@ -10,7 +10,7 @@ int main()
     std::cout << "Result: " << add(2, 3) << std::endl
               << std::endl;
 
-    std::cout << "Calculating 16 - 9 with a function depending on defines in the TOML.. "
+    std::cout << "Calculating 16 - 9 with a function depending on defines in python.. "
               << std::endl;
     std::cout << "Result: " << sub(16, 9) << std::endl
               << std::endl;
