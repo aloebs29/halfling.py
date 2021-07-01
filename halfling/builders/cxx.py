@@ -5,6 +5,7 @@ import os
 import subprocess
 from pathlib import Path
 
+from halfling.builders import common
 from halfling.exceptions import HalflingCompileError, HalflingLinkError
 from halfling.utils import JobPool
 
@@ -13,11 +14,10 @@ WRITE_DEPENDENCY_INFO = "-MMD"
 
 
 @dataclass
-class BuildOptions:
+class CxxBuildOptions(common.BuildOptions):
     # mandatory
     executable_name: os.PathLike
     compiler: str
-    build_dir: os.PathLike
     sources: list
 
     # optional
@@ -36,6 +36,59 @@ class BuildOptions:
             [f"-L{path}" for path in self.lib_paths] + \
             [f"-l{lib}" for lib in self.libs] + \
             self.flags + [KEEP_OUTPUT_COLORS, WRITE_DEPENDENCY_INFO]
+
+
+class CxxBuilder(common.Builder):
+
+    def build(self, num_processes=None):
+        """Builds project.
+
+        Args:
+            num_processes (int): Number of processes to run the build with. If 'None'
+                is provided for this argument, will default to os.cpu_count().
+
+        Returns:
+            None
+
+        Raises:
+            HalfingError: if any build compilation errors occur. Will contain 
+            compiler error message.
+        """
+        print(f"Building {self.options.executable_name}..")
+        # create build + obj directory if they don't exist
+        build_dir = Path(self.options.build_dir)
+        obj_dir = build_dir / self.options.obj_dir
+        obj_dir.mkdir(parents=True, exist_ok=True)
+
+        # we need to keep track of a flag indicating linking is required,
+        # object file names in the case linking is required, and a file
+        # modified times dictionary to save on f.stat() queries
+        needs_link = False
+        obj_fnames = []
+        file_mtimes = {}
+
+        # compile files as needed in a thread pool
+        pool = JobPool(num_processes)
+        for src_fname in self.options.sources:
+            src_fname = Path(src_fname)
+            obj_fname = obj_dir / src_fname.with_suffix(".o").name
+
+            if is_compile_needed(src_fname, obj_fname, file_mtimes):
+                pool.submit_job(compile_file, (self.options.compiler, src_fname, obj_fname,
+                                               self.options.combine_flags()))
+                needs_link = True
+
+            obj_fnames.append(obj_fname)
+
+        pool.wait_for_done()
+
+        # link
+        executable_path = self.options.build_dir / self.options.executable_name
+        if needs_link or not executable_path.exists():
+            link(self.options.compiler, obj_fnames, executable_path, self.options.combine_flags())
+            print("Build successful.")
+        else:
+            print("Build up to date.")
 
 
 def _are_deps_out_of_date(deps_fname, obj_mtime, file_mtimes):
@@ -136,55 +189,3 @@ def link(compiler, infiles, outfile, flags=[]):
     # catch warning output
     if proc.stderr:
         print(proc.stderr.decode("utf-8"))
-
-
-def build(options, num_processes=None):
-    """Builds project.
-
-    Args:
-        options (BuildOptions): Build options object.
-        num_processes (int): Number of processes to run the build with. If 'None'
-            is provided for this argument, will default to os.cpu_count().
-
-    Returns:
-        None
-
-    Raises:
-        HalfingError: if any build compilation errors occur. Will contain 
-        compiler error message.
-    """
-    print(f"Building {options.executable_name}..")
-    # create build + obj directory if they don't exist
-    build_dir = Path(options.build_dir)
-    obj_dir = build_dir / options.obj_dir
-    obj_dir.mkdir(parents=True, exist_ok=True)
-
-    # we need to keep track of a flag indicating linking is required,
-    # object file names in the case linking is required, and a file
-    # modified times dictionary to save on f.stat() queries
-    needs_link = False
-    obj_fnames = []
-    file_mtimes = {}
-
-    # compile files as needed in a thread pool
-    pool = JobPool(num_processes)
-    for src_fname in options.sources:
-        src_fname = Path(src_fname)
-        obj_fname = obj_dir / src_fname.with_suffix(".o").name
-
-        if is_compile_needed(src_fname, obj_fname, file_mtimes):
-            pool.submit_job(compile_file, (options.compiler, src_fname, obj_fname,
-                                           options.combine_flags()))
-            needs_link = True
-
-        obj_fnames.append(obj_fname)
-
-    pool.wait_for_done()
-
-    # link
-    executable_path = options.build_dir / options.executable_name
-    if needs_link or not executable_path.exists():
-        link(options.compiler, obj_fnames, executable_path, options.combine_flags())
-        print("Build successful.")
-    else:
-        print("Build up to date.")

@@ -4,7 +4,7 @@ import argparse
 import sys
 import importlib.util
 
-from halfling.exceptions import HalflingError
+from halfling.exceptions import HalflingError, HalflingSyntaxError
 from halfling.tasks import tasks # what a lovely heirarchy.......
 from halfling.utils import _HALFLING_VERSION
 
@@ -29,8 +29,8 @@ def _collect_command_line_args():
     subparsers = parser.add_subparsers()
     for name, task in tasks.items():
         task_parser = subparsers.add_parser(name)
-        if task.add_args is not None:
-            task.add_args(task_parser)
+        if task.setup_args is not None:
+            task.setup_args(task_parser)
         task_parser.set_defaults(func=task.run)
 
     return parser.parse_args()
@@ -46,7 +46,7 @@ def run():
     except SyntaxError as exc:
         print(f"Invalid syntax found in {_EXTENSION_FILENAME}.")
         # chain & raise so the user gets the familiar python stack trace
-        raise HalflingSyntaxError from exc
+        raise
 
     # collect args & run
     try:
