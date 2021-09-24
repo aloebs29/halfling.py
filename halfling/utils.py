@@ -8,6 +8,8 @@ _HALFLING_ROOT_DIR = Path(__file__).parent
 with open(_HALFLING_ROOT_DIR.parent / "VERSION") as f:
     _HALFLING_VERSION = f.read().strip()
 
+_project_base_dir = Path.cwd() 
+
 
 class JobPool:
     """Multiprocessing job pool which captures and re-raises exceptions in jobs.
@@ -58,3 +60,10 @@ class JobPool:
             # check for done
             if pending == 0:
                 return
+
+
+def get_project_base_dir():
+    """Get the directory of the halfling.py extension file."""
+    # TODO (aloebs29): Find halfling.py in current or ancestor dirs and update base dir
+    # accordingly
+    return _project_base_dir

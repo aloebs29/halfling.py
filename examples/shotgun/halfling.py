@@ -1,12 +1,10 @@
-from pathlib import Path
-
 import halfling
 
 # Common build options used by all types
 build_options = halfling.builders.CxxBuildOptions(
     executable_name="shotgun.out",
     compiler="g++",
-    build_dir=Path(__file__).parent / "hbuild",
+    build_dir="hbuild",
     sources=[
         "src/main.cpp",
         "src/add.cpp",
@@ -17,7 +15,8 @@ build_options = halfling.builders.CxxBuildOptions(
     include_paths=["lib/mul/inc"],
     defines=["DEFINED_IN_PY", "ALSO_DEFINED_IN_PY"],
     lib_paths=["lib/mul"],
-    libs=["mul"]
+    libs=["mul"],
+    create_compile_flags_txt=True,
 )
 
 # Add build and clean tasks to halfling

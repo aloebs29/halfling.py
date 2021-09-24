@@ -4,9 +4,9 @@ import argparse
 import sys
 import importlib.util
 
-from halfling.exceptions import HalflingError, HalflingSyntaxError
+from halfling.exceptions import HalflingError
 from halfling.tasks import _tasks
-from halfling.utils import _HALFLING_VERSION
+from halfling.utils import _HALFLING_VERSION, get_project_base_dir
 
 # TODO (aloebs29): search up directories for this file if it is not found in the current dir. This
 # would allow the halfling CLI command to be called anywhere within a project.
@@ -14,12 +14,29 @@ _EXTENSION_MODULE_NAME = "extension"
 _EXTENSION_FILENAME = "halfling.py"
 
 
-def _load_extension(extension_filename):
+def _load_extension(extension_path):
     extension_spec = importlib.util.spec_from_file_location(_EXTENSION_MODULE_NAME, 
-                                                            extension_filename)
+                                                            extension_path)
     extension_module = importlib.util.module_from_spec(extension_spec)
     sys.modules[_EXTENSION_MODULE_NAME] = extension_module
     return extension_spec.loader.exec_module(extension_module)
+
+
+def _setup_task_args(subparser, task):
+    if task.prerequisites is not None:
+        for prerequisite in task.prerequisites:
+            _setup_task_args(subparser, _tasks[prerequisite])
+
+    if task.setup_args is not None:
+        task.setup_args(subparser)
+
+
+def _run_task(args, task):
+    if task.prerequisites is not None:
+        for prerequisite in task.prerequisites:
+            _run_task(args, _tasks[prerequisite])
+
+    task.run(args)
 
 
 def _collect_command_line_args():
@@ -29,9 +46,8 @@ def _collect_command_line_args():
     subparsers = parser.add_subparsers()
     for name, task in _tasks.items():
         task_parser = subparsers.add_parser(name)
-        if task.setup_args is not None:
-            task.setup_args(task_parser)
-        task_parser.set_defaults(func=task.run)
+        _setup_task_args(task_parser, task)
+        task_parser.set_defaults(task=task) # store the task itself on the Namespace
 
     return parser.parse_args()
 
@@ -39,7 +55,7 @@ def _collect_command_line_args():
 def run():
     # attempt to load extension
     try:
-        extension_module = _load_extension(_EXTENSION_FILENAME)
+        extension_module = _load_extension(get_project_base_dir() / _EXTENSION_FILENAME)
     except FileNotFoundError:
         # only warn if no extension, that way --version, --help, etc can be run from any directory
         print(f"Warning: {_EXTENSION_FILENAME} file not found in current directory.")
@@ -53,8 +69,8 @@ def run():
         args = _collect_command_line_args()
         if args.version:
             print(f"{_HALFLING_VERSION}")
-        elif hasattr(args, "func"):
-            args.func(args)
+        elif hasattr(args, "task"):
+            _run_task(args, args.task)
         else:
             print("No arguments provided. Type 'halfling -h' for help.")
     except HalflingError as exc:

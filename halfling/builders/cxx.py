@@ -7,7 +7,7 @@ from pathlib import Path
 
 from halfling.builders import common
 from halfling.exceptions import HalflingCompileError, HalflingLinkError
-from halfling.utils import JobPool
+from halfling.utils import JobPool, get_project_base_dir
 
 KEEP_OUTPUT_COLORS = "-fdiagnostics-color=always"
 WRITE_DEPENDENCY_INFO = "-MMD"
@@ -30,14 +30,19 @@ class CxxBuildOptions(common.BuildOptions):
     lib_paths: list = field(default_factory=list)
     libs: list = field(default_factory=list)
 
+    create_compile_flags_txt: bool = False
+
     
-    def combine_flags(self):
+    def combine_flags(self, include_libs=True):
         """Convenience function for creating flags to be passed to compiler command."""
-        return [f"-I{path}" for path in self.include_paths] + \
+        all_flags =  [f"-I{path}" for path in self.include_paths] + \
             [f"-D{define}" for define in self.defines] + \
-            [f"-L{path}" for path in self.lib_paths] + \
-            [f"-l{lib}" for lib in self.libs] + \
             self.flags + [KEEP_OUTPUT_COLORS, WRITE_DEPENDENCY_INFO]
+        if include_libs:
+            all_flags += [f"-L{path}" for path in self.lib_paths] + \
+                [f"-l{lib}" for lib in self.libs]
+
+        return all_flags
 
 
 class CxxBuilder(common.Builder):
@@ -56,9 +61,12 @@ class CxxBuilder(common.Builder):
         """
         print(f"Building {self.options.executable_name}..")
         # create build + obj directory if they don't exist
-        build_dir = Path(self.options.build_dir)
+        build_dir = get_project_base_dir() / self.options.build_dir
         obj_dir = build_dir / self.options.obj_dir
         obj_dir.mkdir(parents=True, exist_ok=True)
+
+        if self.options.create_compile_flags_txt:
+            create_compile_flags_txt(self.options)
 
         # we need to keep track of a flag indicating linking is required,
         # object file names in the case linking is required, and a file
@@ -75,7 +83,7 @@ class CxxBuilder(common.Builder):
 
             if is_compile_needed(src_fname, obj_fname, file_mtimes):
                 pool.submit_job(compile_file, (self.options.compiler, src_fname, obj_fname,
-                                               self.options.combine_flags()))
+                                               self.options.combine_flags(include_libs=False)))
                 needs_link = True
 
             obj_fnames.append(obj_fname)
@@ -83,7 +91,7 @@ class CxxBuilder(common.Builder):
         pool.wait_for_done()
 
         # link
-        executable_path = self.options.build_dir / self.options.executable_name
+        executable_path = build_dir / self.options.executable_name
         if needs_link or not executable_path.exists():
             link(self.options.compiler, obj_fnames, executable_path, self.options.combine_flags())
             print("Build successful.")
@@ -109,6 +117,12 @@ def _are_deps_out_of_date(deps_fname, obj_mtime, file_mtimes):
 
     # if execution reaches here, all dependencies are up to date
     return False
+
+
+def create_compile_flags_txt(options):
+    with open(get_project_base_dir() / "compile_flags.txt", "w") as file:
+        for flag in options.combine_flags():
+            file.write(f"{flag}\n")
 
 
 def is_compile_needed(src_fname, obj_fname, file_mtimes):

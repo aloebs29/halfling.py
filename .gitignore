@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Compilation databases (used in examples)
+compile_commands.json
+compile_flags.txt
